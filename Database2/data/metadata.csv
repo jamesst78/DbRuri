@@ -1,0 +1,5 @@
+Table Name, Column Name, Column Type, ClusteringKey, Indexed
+People,name,java.lang.String,false,false
+People,home,java.awt.Polygon,false,false
+People,id,java.lang.Integer,true,false
+People,TouchDate,java.util.Date,false,false
