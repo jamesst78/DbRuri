@@ -388,7 +388,7 @@ public class DBApp {
 		Hashtable<String, Object> ht2 = new Hashtable<String, Object>();
 		ht2.put("id", new Integer(3));
 		ht2.put("name", "Mohab");
-		ht2.put("home", "(0,0),(5,5),(2,2)");
+		ht2.put("home", "(0,0),(7,3),(2,2)");
 
 		Hashtable<String, Object> ht3 = new Hashtable<String, Object>();
 		ht3.put("id", new Integer(2));
@@ -456,24 +456,24 @@ public class DBApp {
 		
 		
 		
-		String dir = "data\\People.txt";
-		FileInputStream f = new FileInputStream(dir);
-		ObjectInputStream in = new ObjectInputStream(f);
-
-		Table t = (Table) in.readObject();
-		
-		String dir1 = t.pages.get(0);
-
-		FileInputStream f1 = new FileInputStream(dir1);
-		ObjectInputStream in1 = new ObjectInputStream(f1);
-		Page p1 = (Page) in1.readObject();
-
-		String dir2 = t.pages.get(1);
-
-		FileInputStream f2 = new FileInputStream(dir2);
-		ObjectInputStream in2 = new ObjectInputStream(f2);
-
-		Page p2 = (Page) in2.readObject();
+//		String dir = "data\\People.txt";
+//		FileInputStream f = new FileInputStream(dir);
+//		ObjectInputStream in = new ObjectInputStream(f);
+//
+//		Table t = (Table) in.readObject();
+//		
+//		String dir1 = t.pages.get(0);
+//
+//		FileInputStream f1 = new FileInputStream(dir1);
+//		ObjectInputStream in1 = new ObjectInputStream(f1);
+//		Page p1 = (Page) in1.readObject();
+//
+//		String dir2 = t.pages.get(1);
+//
+//		FileInputStream f2 = new FileInputStream(dir2);
+//		ObjectInputStream in2 = new ObjectInputStream(f2);
+//
+//		Page p2 = (Page) in2.readObject();
 
 //		System.out.println(p1);
 //		System.out.println("--------------------------------------\nEND\nOF\nPAGE\n--------------------------------------------");

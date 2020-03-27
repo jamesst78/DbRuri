@@ -14,4 +14,9 @@ public class TupleIdentification  {
 		this.pageName = pageName;
 		this.tupleID = tupleID;
 	}
+	
+	
+	public String toString() {
+		return (this.tupleID + "," + this.pageName);
+	}
 }

@@ -159,11 +159,12 @@ public class Page extends Vector {
 			Double [] points = p.polygonToRectanglePoints();
 			
 			TupleIdentification ti = new TupleIdentification(r, pageName); //this r , I got it already tmam? and I accessed the page. how do I find the tuple? within the page
-			tree = tree.add( ti , Geometries.rectangle(points[0], points[1], points[2], points[3]));
+			tree = tree.add( "r," + pageName , Geometries.rectangle(points[0], points[1], points[2], points[3]));
 			
 		
 			
 		}
+		System.out.println(tree.asString());
 		return tree;
 		
 		
