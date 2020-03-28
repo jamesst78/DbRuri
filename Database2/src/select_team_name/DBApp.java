@@ -2,6 +2,7 @@ package select_team_name;
 
 
 
+import java.util.List;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -27,10 +28,7 @@ import java.util.Hashtable;
 import java.util.Random;
 import java.util.concurrent.ThreadLocalRandom;
 
-import com.github.davidmoten.rtree.RTree;
-import com.github.davidmoten.rtree.Serializer;
-import com.github.davidmoten.rtree.Serializers;
-import com.github.davidmoten.rtree.geometry.Geometry;
+
 
 public class DBApp {
 
@@ -307,8 +305,8 @@ public class DBApp {
 	
 	public void createRTreeIndex(String strTableName , String strColName) throws DBAppException, IOException, ClassNotFoundException
 	{
+		RTree tree = new RTree<TupleIdentification>();
 		
-		RTree<String, Geometry> tree = RTree.create();
 		//han assume el Column type is a polygon f3lan
 		
 		//we shall go deserialize el table
@@ -328,6 +326,7 @@ public class DBApp {
 			Page p = (Page) in2.readObject();
 			tree = p.fillRTree(tree , strColName, t.pages.get(i));
 			//
+		
 			in2.close();
 			file2.close();
 			
@@ -351,12 +350,30 @@ public class DBApp {
 		out3.close();
 		file3.close();
 		
+		
+		
+		
+	//*******************	//testing if it works for ruri**********************************
+		// change the float numbers, coords is the left most top point , dimensions are the length and width
+		
+		float [] coords = new float [] {-6,-4};
+		float [] dimensions = new float [] {1,1};
+		List<TupleIdentification> tp =  tree.search(coords, dimensions);
+		System.out.println(tp);
+		
+		//--------------------------------------------------------------------------
+		
+		
 		//TODO : Serialize the tree into a file
 		
-		OutputStream file4 = new FileOutputStream(treeDir);
 		
-		Serializer<String, Geometry> serializer =  Serializers.flatBuffers().utf8();
-				serializer.write(tree, file4);
+		
+		FileOutputStream file4 = new FileOutputStream(treeDir);
+		ObjectOutputStream out4 = new ObjectOutputStream(file4);
+		out4.close();
+		file4.close();
+		
+		
 		
 		
 		

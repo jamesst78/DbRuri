@@ -5,7 +5,7 @@ import java.awt.Rectangle;
 import java.util.ArrayList;
 import java.util.StringTokenizer;
 
-import com.github.davidmoten.rtree.geometry.Geometries;
+
 
 
 
@@ -53,19 +53,18 @@ public class Polygon extends java.awt.Polygon implements Comparable {
 		return ThisArea1-ThisArea ;
 	} 
 	
-	public Double [] polygonToRectanglePoints() {
-		Double[] points = new Double [4];
+	public float [][] polygonToRectanglePoints() {
+		float[][] points = new float [2][2];
 		Rectangle r = this.getBoundingBox();
-		double minX = r.getMinX();
-		double maxX = r.getMaxX();
-		double minY = r.getMinY();
-		double maxY = r.getMaxY();
-		points[0] = minX;
-		points[1] = minY;
-		points[2] = maxX;
-		points[3] = maxY;
-		for(int i = 0 ; i< points.length ; i++) {
-		System.out.println(points[i]);
+		float minX = (float) r.getMinX();
+		float maxX = (float) r.getMaxX();
+		float minY = (float) r.getMinY();
+		float maxY = (float) r.getMaxY();
+		points[0][0] = minX;
+		points[0][1] = minY;
+		points[1][0] = maxX;
+		points[1][1] = maxY;
+		for(int i = 0 ; i< points.length ; i++) {		
 		}
 		return points;
 		
