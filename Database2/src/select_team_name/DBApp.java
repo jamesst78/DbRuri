@@ -356,8 +356,8 @@ public class DBApp {
 	//*******************	//testing if it works for ruri**********************************
 		// change the float numbers, coords is the left most top point , dimensions are the length and width
 		
-		float [] coords = new float [] {0,10};
-		float [] dimensions = new float [] {10,10};
+		float [] coords = new float [] {0,5};
+		float [] dimensions = new float [] {7,1};
 		List<TupleIdentification> tp =  tree.search(coords, dimensions);
 		System.out.println(tp);
 		
