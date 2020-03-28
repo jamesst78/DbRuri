@@ -63,9 +63,8 @@ public class Polygon extends java.awt.Polygon implements Comparable {
 		points[0][0] = minX;
 		points[0][1] = maxY;
 		points[1][0] = maxX-minX;
-		points[1][1] = maxY-minY;
-		for(int i = 0 ; i< points.length ; i++) {		
-		}
+		points[1][1] = maxY-minY;   //hi ya ruri
+		
 		return points;
 		
 	}
