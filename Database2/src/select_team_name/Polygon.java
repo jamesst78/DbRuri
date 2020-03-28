@@ -64,6 +64,10 @@ public class Polygon extends java.awt.Polygon implements Comparable {
 		points[0][1] = maxY;
 		points[1][0] = maxX-minX;
 		points[1][1] = maxY-minY;   //hi ya ruri
+		// ahlan ahlan ya dodi
+		// el saloon nwr
+		//law 3yza t push any changes you made to the code , 23mly those steps
+		
 		
 		return points;
 		
