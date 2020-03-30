@@ -154,12 +154,13 @@ public class Page extends Vector {
 		for(int i = 0 ; i<this.size() ; i++) {
 			int r = random.nextInt(2147000000);
 			Tuple t = (Tuple) this.get(i);
-			t.identification = r; //keda ana 7ateet el r fel box el esmo Ti , wel tuple nafso , 34an nro7 nshofhom equal b3d kda wla la2a lama n search for tuple
+		//	t.identification = r; //keda ana 7ateet el r fel box el esmo Ti , wel tuple nafso , 34an nro7 nshofhom equal b3d kda wla la2a lama n search for tuple
 			Polygon p = (Polygon) t.theTuple.get(strColName);
 			float [][] points = p.polygonToRectanglePoints();
 			
 			TupleIdentification ti = new TupleIdentification(r, pageName); //this r , I got it already tmam? and I accessed the page. how do I find the tuple? within the page
 			tree.insert(points[0] , points[1] , ti);
+			t.identification = ti;
 			
 		
 			

@@ -8,7 +8,7 @@ import java.util.Hashtable;
 public class Tuple implements Comparable, Serializable{
 	Hashtable<String, Comparable> theTuple;
 	String keyS;
-	int identification; 
+	TupleIdentification identification; 
 	public Tuple(Hashtable<String, Comparable> theTuple, String keyS) {
 		this.theTuple = theTuple;
 		this.keyS = keyS;
