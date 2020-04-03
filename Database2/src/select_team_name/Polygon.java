@@ -69,6 +69,8 @@ public class Polygon extends java.awt.Polygon implements Comparable {
 		
 	}
 	
+
+	
 	
 	public static void main(String[] args) throws DBAppException{
 		Polygon p = parsePolygon("(0,3),(5,7),(2,2)");

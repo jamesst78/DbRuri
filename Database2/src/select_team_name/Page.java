@@ -1,5 +1,6 @@
 package select_team_name;
 
+import java.awt.Dimension;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -8,6 +9,9 @@ import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.Random;
 import java.util.Vector;
+
+import bplus.BPTree;
+import bplus.Ref;
 
 
 
@@ -146,29 +150,24 @@ public class Page extends Vector {
 	
 	
 	
-	public RTree<TupleIdentification> fillRTree(RTree<TupleIdentification> tree , String strColName , String pageName) {
-		
-		Random random = new Random();
-		
-		
+	public BPTree<Double> fillRTree(BPTree<Double> tree , String strColName , String pageName) {
+			
 		for(int i = 0 ; i<this.size() ; i++) {
-			int r = random.nextInt(2147000000);
+			
 			Tuple t = (Tuple) this.get(i);
-		//	t.identification = r; //keda ana 7ateet el r fel box el esmo Ti , wel tuple nafso , 34an nro7 nshofhom equal b3d kda wla la2a lama n search for tuple
-			Polygon p = (Polygon) t.theTuple.get(strColName);
-			float [][] points = p.polygonToRectanglePoints();
-			
-			TupleIdentification ti = new TupleIdentification(r, pageName); //this r , I got it already tmam? and I accessed the page. how do I find the tuple? within the page
-			tree.insert(points[0] , points[1] , ti);
-			t.identification = ti;
-			
 		
+			Polygon p = (Polygon) t.theTuple.get(strColName);
+			Dimension dim = p.getBounds( ).getSize();
+			double ThisArea = dim.width * dim.height;
 			
+			Ref r = new Ref(pageName, 6);
+			
+			tree.insert(ThisArea, r);
+					
 		}
 		//tree.visualize();
 		System.out.println("got to return");
-		return tree;
-		
+		return tree;	
 		
 	}
 	

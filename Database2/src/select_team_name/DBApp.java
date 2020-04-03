@@ -28,6 +28,8 @@ import java.util.Hashtable;
 import java.util.Random;
 import java.util.concurrent.ThreadLocalRandom;
 
+import bplus.BPTree;
+
 
 
 public class DBApp {
@@ -301,11 +303,12 @@ public class DBApp {
 	}
 	
 	
-	// Muhad && Farah R tree
+	// Muhad && Farah && yuka R tree
 	
 	public void createRTreeIndex(String strTableName , String strColName) throws DBAppException, IOException, ClassNotFoundException
 	{
-		RTree tree = new RTree<TupleIdentification>();
+		//TODO: change to 255 later
+		BPTree tree = new BPTree<Double>(2);  //2 for testing , later 255
 		
 		//han assume el Column type is a polygon f3lan
 		
@@ -350,19 +353,11 @@ public class DBApp {
 		out3.close();
 		file3.close();
 		
-		
-		
-		
-	//*******************	//testing if it works for ruri**********************************
-		// change the float numbers, coords is the left most top point , dimensions are the length and width
-		
-		float [] coords = new float [] {0,5};
-		float [] dimensions = new float [] {7,1};
-		List<TupleIdentification> tp =  tree.search(coords, dimensions);
-		System.out.println(tp);
-		
+			
 		//--------------------------------------------------------------------------
 		
+		
+		System.out.println(tree.toString());
 		
 		//TODO : Serialize the tree into a file
 		
@@ -372,6 +367,7 @@ public class DBApp {
 		ObjectOutputStream out4 = new ObjectOutputStream(file4);
 		out4.close();
 		file4.close();
+		
 		
 		
 		
