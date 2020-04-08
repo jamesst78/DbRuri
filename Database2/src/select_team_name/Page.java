@@ -63,7 +63,7 @@ public class Page extends Vector {
 		return null;
 	}
 
-	public void deleteFromPage(Hashtable<String, Comparable> ht) {
+	public void deleteFromPage( Hashtable<String, Comparable> ht,ArrayList<BRTree<String>> bRAll, ArrayList<String> columnNamesbt, String pageName) throws IOException, ClassNotFoundException {
 		ArrayList<String> columnNames = new ArrayList<String>();
 		ArrayList<Comparable> columnValues = new ArrayList<Comparable>();
 
@@ -80,14 +80,20 @@ public class Page extends Vector {
 			boolean satisfiesCondition = true;
 
 			for (int j = 0; j < columnNames.size(); j++) {
-				if (!(t.theTuple.get(columnNames.get(j)).compareTo(columnValues.get(j))==0)) {
+				if (!(t.theTuple.get(columnNames.get(j)).equals(columnValues.get(j)))) {
 					System.out.println((t.theTuple.get(columnNames.get(j)).compareTo(columnValues.get(j))));
 					satisfiesCondition = false;
 				}
 			}
 			if (satisfiesCondition)
 				this.remove(i);
+			for(int k=0;k<bRAll.size();k++) {
+				bRAll.get(k).delete(t.theTuple.get(columnNamesbt.get(k)).toString(), pageName);
+				
+				
+			}
 		}
+		
 	}
 
 	public void updatePage(String strTableName, Comparable key, Hashtable<String, Comparable> ht)

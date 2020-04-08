@@ -192,8 +192,8 @@ public class DBApp {
 
 	public void deleteFromTable(String strTableName, Hashtable<String, Object> ht)
 			throws ClassNotFoundException, IOException, DBAppException {
-		String dir = "data\\" + strTableName + ".txt";
 		String row = "";
+		ArrayList<String> rtreeCol = new ArrayList<String>();
 		BufferedReader csvReader = new BufferedReader(new FileReader("data\\metadata.csv"));
 		boolean flag = false;
 		while ((row = csvReader.readLine()) != null) {
@@ -202,9 +202,12 @@ public class DBApp {
 			if (data[0].equals(strTableName)) {
 				flag = true;
 			}
+			if(data[0].equals(strTableName) && data[4].equals("true") && ht.containsKey(data[1])) {
+				rtreeCol.add(data[1]);
+			}
 		}
 		if(!flag)
-			throw new DBAppException("Table already exists");
+			throw new DBAppException("Table does not exsist");
 		Hashtable<String, Comparable> newHt = new Hashtable<String, Comparable>();
 		Enumeration<String> enumeration = ht.keys();
 		// iterate using enumeration object
@@ -214,13 +217,40 @@ public class DBApp {
 			newHt.put(htKey, (Comparable) ht.get(htKey));
 		}
 		// deserialize
-		FileInputStream file = new FileInputStream(dir);
+		FileInputStream file = new FileInputStream("data\\" + strTableName + ".txt");
 		ObjectInputStream in = new ObjectInputStream(file);
 
 		// Method for deserialization of object
 		Table t = (Table) in.readObject();
-
-		t.deleteFromTable(strTableName, newHt);
+		
+		if(rtreeCol.isEmpty()) {
+			t.deleteFromTable(strTableName, newHt);
+		}
+		else {
+			ArrayList<BRTree<String>> bRAll  = new ArrayList<BRTree<String>>();
+		  for(int i = 0;i<rtreeCol.size();i++){				//Im now deserializing all the RTrees I found made for the columns in input ht
+			String tPath = "data/"+strTableName+"_"+rtreeCol.get(i);
+			FileInputStream fTree = new FileInputStream(tPath);
+			ObjectInputStream inTree = new ObjectInputStream(fTree);
+			BRTree<String> bP = (BRTree<String>)inTree.readObject();    
+			bRAll.add(bP);												//adding those RTrees to an array to pass it to table delete using RTree
+			fTree.close();
+			inTree.close();	
+			}
+		  
+			t.deleteFromTableBTree(strTableName,newHt,bRAll,rtreeCol);
+// serialize the trees after deleting			
+//			for (int x = 0; x < bPAll.size(); x++) {
+//				FileOutputStream fo = new FileOutputStream(
+//						new File("data/" + strTableName + "_" + btreeCol.get(x) + ".txt"));
+//				ObjectOutputStream oj = new ObjectOutputStream(fo);
+//				oj.writeObject(bPAll.get(x));
+//				fo.close();
+//				oj.close();
+//			}
+		}
+		
+		
 		ArrayList<String> toRem = new ArrayList<String>();
 		for (String pageDir : t.pages) {
 			FileInputStream fileP = new FileInputStream(pageDir);
@@ -241,7 +271,7 @@ public class DBApp {
 		file.close();
 
 		// serialize
-		FileOutputStream fileO = new FileOutputStream(dir);
+		FileOutputStream fileO = new FileOutputStream("data\\" + strTableName + ".txt");
 		ObjectOutputStream out = new ObjectOutputStream(fileO);
 		out.writeObject(t);
 
@@ -316,7 +346,7 @@ public class DBApp {
 		//we shall go deserialize el table
 		String pageString = "";
 		String dir = "data\\" + strTableName + ".txt";
-		String treeDir = "data\\" + strTableName + strColName + "RTreeIndex" + ".txt";
+		String treeDir = "data\\" + strTableName +"_" + strColName + ".txt";
 		FileInputStream file = new FileInputStream(dir);
 		ObjectInputStream in = new ObjectInputStream(file);
 		
@@ -327,6 +357,7 @@ public class DBApp {
 			FileInputStream file2 = new FileInputStream(pageString);
 			ObjectInputStream in2 = new ObjectInputStream(file2);
 			//do something with the page
+			System.out.println("PageString : " + pageString);
 			Page p = (Page) in2.readObject();
 			tree =  p.fillRTree(tree , strColName, t.pages.get(i));
 			//
@@ -337,7 +368,7 @@ public class DBApp {
 			//serialize the page back
 			FileOutputStream fileO = new FileOutputStream(pageString);
 			ObjectOutputStream out = new ObjectOutputStream(fileO);
-			out.writeObject(t);
+			out.writeObject(p);
 
 			out.close();
 			fileO.close();
@@ -389,31 +420,128 @@ public class DBApp {
 		//ht.put("isHappy", "java.lang.Boolean");
 	//	ht.put("birthDay", "java.util.Date");
 		ht.put("home", "java.awt.Polygon");
+		ht.put("office", "java.awt.Polygon");
 
 		Hashtable<String, Object> ht1 = new Hashtable<String, Object>();
 		ht1.put("id", new Integer(1));
 		ht1.put("name", "Eiad");
-		//ht1.put("gpa", 0.7);
+	//	ht1.put("gpa", 0.7);
 	//	ht1.put("isHappy", false);
 		//ht1.put("birthDay", "04/08/1999 03:30:04");
 		ht1.put("home", "(0,0),(1,1),(2,2)");
+		ht1.put("office", "(0,0),(5,5),(7,7)");
 		
 
 		Hashtable<String, Object> ht2 = new Hashtable<String, Object>();
-		ht2.put("id", new Integer(3));
-		ht2.put("name", "Mohab");
+		ht2.put("id", new Integer(2));
+		//ht2.put("gpa", 1.5);
+		ht2.put("name", "Mohab2");
 		ht2.put("home", "(0,0),(7,3),(2,2)");
+		ht2.put("office", "(0,0),(5,5),(7,7)");
+
 
 		Hashtable<String, Object> ht3 = new Hashtable<String, Object>();
-		ht3.put("id", new Integer(2));
-		ht3.put("name", "47");
+		ht3.put("id", new Integer(3));
+		ht3.put("name", "Farahat4");
 		ht3.put("home", "(0,0),(5,5),(2,2)");
+		ht3.put("office", "(0,0),(9,9),(4,1)");
+		
+		Hashtable<String, Object> ht4 = new Hashtable<String, Object>();
+		ht4.put("id", new Integer(4));
+		ht4.put("name", "Mai4");
+		ht4.put("home", "(1,0),(1,5),(1,2)");
+		ht4.put("office", "(0,0),(9,9),(4,1)");
+		
+		Hashtable<String, Object> ht5 = new Hashtable<String, Object>();
+		ht5.put("id", new Integer(5));
+		ht5.put("name", "Ahmed5");
+		ht5.put("home", "(3,3),(8,4),(9,5)");
+		ht5.put("office", "(0,0),(4,4),(4,8)");
+		
+		Hashtable<String, Object> ht6 = new Hashtable<String, Object>();
+		ht6.put("id", new Integer(6));
+		ht6.put("name", "Zeiyad6");
+		ht6.put("home", "(2,2),(1,5),(0,2)");
+		ht6.put("office", "(0,6),(2,3),(8,9)");
+		
+		Hashtable<String, Object> ht7 = new Hashtable<String, Object>();
+		ht7.put("id", new Integer(7));
+		ht7.put("name", "Salma7");
+		ht7.put("home", "(1,1),(0,4),(2,7)");
+		ht7.put("office", "(0,6),(2,3),(8,9)");
+		
+		Hashtable<String, Object> ht8 = new Hashtable<String, Object>();
+		
+		ht8.put("name", "Salma7");
+		ht8.put("office", "(0,6),(2,3),(8,9)");
+		
+		
+		
+		
+
 		db.createTable("People", "id", ht);
 		db.insertIntoTable("People", ht1);
 		db.insertIntoTable("People", ht2);
 		db.insertIntoTable("People", ht3);
-		
+		db.insertIntoTable("People", ht4);
+		db.insertIntoTable("People", ht5);
+		db.insertIntoTable("People", ht6);
+		db.insertIntoTable("People", ht7);
 		db.createRTreeIndex("People", "home");
+		db.createRTreeIndex("People", "office");
+		
+		
+		//Print the trees , Print the table before and after
+		
+
+//		
+//		System.out.println("PRINTING TABLEEEEEEE");
+//		String dir = "data\\People.txt";
+//		FileInputStream f = new FileInputStream(dir);
+//		ObjectInputStream in = new ObjectInputStream(f);
+//
+//		Table t = (Table) in.readObject();
+//		
+//		String dir1 = t.pages.get(0);
+//
+//		FileInputStream f1 = new FileInputStream(dir1);
+//		ObjectInputStream in1 = new ObjectInputStream(f1);
+//		Page p1 = (Page) in1.readObject();
+//
+//		//String dir2 = t.pages.get(1);
+//
+//		//FileInputStream f2 = new FileInputStream(dir2);
+//		//ObjectInputStream in2 = new ObjectInputStream(f2);
+//
+//		//Page p2 = (Page) in2.readObject();
+//
+//		System.out.println(p1);
+//		System.out.println("--------------------------------------\nEND\nOF\nPAGE\n--------------------------------------------");
+		//System.out.println(p2);
+		
+		
+		
+		System.out.println("DELETING OCCURS HERE NOW -------------------------------");
+		
+		db.deleteFromTable("People", ht8);
+		
+//		
+		FileInputStream fi = new FileInputStream("data\\People_office.txt");
+		ObjectInputStream oi = new ObjectInputStream(fi);
+		BRTree<String> mybr = (BRTree<String>)oi.readObject();
+		fi.close();
+		oi.close();
+		System.out.println(mybr);
+		
+		FileInputStream fi2 = new FileInputStream("data\\People_home.txt");
+		ObjectInputStream oi2 = new ObjectInputStream(fi2);
+		BRTree<String> mybr2 = (BRTree<String>)oi2.readObject();
+		fi2.close();
+		oi2.close();
+		System.out.println(mybr2);
+
+		
+		System.out.println("THAT'S IT");
 
 		// Getting page
 		// Reading the object from a file
@@ -434,12 +562,12 @@ public class DBApp {
 //        	System.out.println(((Tuple)p.get(i)).theTuple.get("name"));
 //        }
 		// done
-		Hashtable<String, Object> ht4 = new Hashtable<String, Object>();
-		ht4.put("isHappy", false);
+		//Hashtable<String, Object> ht4 = new Hashtable<String, Object>();
+	//	ht4.put("isHappy", false);
 		//db.deleteFromTable("People", ht4);
 //		
 //		System.out.println("Num pages after ="+db.tables.get(0).pages.size());
-		Hashtable<String, Object> ht5 = new Hashtable<String, Object>();
+	//	Hashtable<String, Object> ht5 = new Hashtable<String, Object>();
 		//ht5.put("isHappy", false);
 		//db.updateTable("People", "1", ht5);
 
@@ -470,28 +598,7 @@ public class DBApp {
 		
 		
 		
-//		String dir = "data\\People.txt";
-//		FileInputStream f = new FileInputStream(dir);
-//		ObjectInputStream in = new ObjectInputStream(f);
-//
-//		Table t = (Table) in.readObject();
-//		
-//		String dir1 = t.pages.get(0);
-//
-//		FileInputStream f1 = new FileInputStream(dir1);
-//		ObjectInputStream in1 = new ObjectInputStream(f1);
-//		Page p1 = (Page) in1.readObject();
-//
-//		String dir2 = t.pages.get(1);
-//
-//		FileInputStream f2 = new FileInputStream(dir2);
-//		ObjectInputStream in2 = new ObjectInputStream(f2);
-//
-//		Page p2 = (Page) in2.readObject();
-
-//		System.out.println(p1);
-//		System.out.println("--------------------------------------\nEND\nOF\nPAGE\n--------------------------------------------");
-//		System.out.println(p2);
+	
 
 	}
 
