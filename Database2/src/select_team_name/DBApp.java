@@ -29,6 +29,7 @@ import java.util.Random;
 import java.util.concurrent.ThreadLocalRandom;
 
 import bplus.BPTree;
+import bplus.BRTree;
 
 
 
@@ -308,7 +309,7 @@ public class DBApp {
 	public void createRTreeIndex(String strTableName , String strColName) throws DBAppException, IOException, ClassNotFoundException
 	{
 		//TODO: change to 255 later
-		BPTree tree = new BPTree<Double>(2);  //2 for testing , later 255
+		BRTree tree = new BRTree<Double>(2);  //2 for testing , later 255
 		
 		//han assume el Column type is a polygon f3lan
 		
@@ -327,7 +328,7 @@ public class DBApp {
 			ObjectInputStream in2 = new ObjectInputStream(file2);
 			//do something with the page
 			Page p = (Page) in2.readObject();
-			tree = p.fillRTree(tree , strColName, t.pages.get(i));
+			tree =  p.fillRTree(tree , strColName, t.pages.get(i));
 			//
 		
 			in2.close();

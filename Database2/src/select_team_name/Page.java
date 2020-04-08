@@ -11,6 +11,7 @@ import java.util.Random;
 import java.util.Vector;
 
 import bplus.BPTree;
+import bplus.BRTree;
 import bplus.Ref;
 
 
@@ -150,7 +151,7 @@ public class Page extends Vector {
 	
 	
 	
-	public BPTree<Double> fillRTree(BPTree<Double> tree , String strColName , String pageName) {
+	public BRTree<Double> fillRTree(BRTree<Double> tree , String strColName , String pageName) {
 			
 		for(int i = 0 ; i<this.size() ; i++) {
 			
