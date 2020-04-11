@@ -180,7 +180,9 @@ public class Table implements Serializable {
 		ArrayList<BRTree<Double>> bRAll = new ArrayList<BRTree<Double>>();
 		ArrayList<BPTree<String>> bPAll = new ArrayList<BPTree<String>>();
 
-		ArrayList<String> correspondingColumns = new ArrayList<String>();
+		ArrayList<String> correspondingColumnsB = new ArrayList<String>();
+		ArrayList<String> correspondingColumnsR = new ArrayList<String>();
+
 		BufferedReader mCsvReader = new BufferedReader(new FileReader("data\\metadata.csv"));
 		while ((row = mCsvReader.readLine()) != null) {
 			String[] data = row.split(",");
@@ -192,7 +194,7 @@ public class Table implements Serializable {
 				ObjectInputStream inTree = new ObjectInputStream(fTree);
 				BRTree<Double> bP = (BRTree<Double>) inTree.readObject();
 				bRAll.add(bP);
-				correspondingColumns.add(data[1]);
+				correspondingColumnsR.add(data[1]);
 				fTree.close();
 				inTree.close(); 
 			}
@@ -302,7 +304,7 @@ public class Table implements Serializable {
 				ObjectInputStream pin = new ObjectInputStream(pfile);
 
 				Page p = (Page) pin.readObject();
-				p.deleteFromPage(ht, bRAll, bPAll, correspondingColumns, ref.getPage());
+				p.deleteFromPage(ht, bRAll, bPAll, correspondingColumnsB,  correspondingColumnsR, ref.getPage());
 
 				pfile.close();
 				pin.close();
@@ -319,7 +321,7 @@ public class Table implements Serializable {
 		
 		// serialize the btrees 
 		for (int x = 0; x < bRAll.size(); x++) {
-			FileOutputStream fo = new FileOutputStream("data/" + tableName + "_" + correspondingColumns.get(x) + ".txt");
+			FileOutputStream fo = new FileOutputStream("data/" + tableName + "_" + correspondingColumnsR.get(x) + ".txt");
 			ObjectOutputStream oj = new ObjectOutputStream(fo);
 			oj.writeObject(bRAll.get(x));
 			fo.close();
@@ -354,7 +356,9 @@ public class Table implements Serializable {
 		//trees belonging to this table
 		ArrayList<BPTree<String>> bPAll = new ArrayList<BPTree<String>>();
 		ArrayList<BRTree<Double>> bRAll = new ArrayList<BRTree<Double>>();
-		ArrayList<String> correspondingColumns = new ArrayList<String>();
+		ArrayList<String> correspondingColumnsB = new ArrayList<String>();
+		ArrayList<String> correspondingColumnsR = new ArrayList<String>();
+
 		BufferedReader mCsvReader = new BufferedReader(new FileReader("data\\metadata.csv"));
 		while ((row = mCsvReader.readLine()) != null) {
 			String[] data = row.split(",");
@@ -366,7 +370,7 @@ public class Table implements Serializable {
 				ObjectInputStream inTree = new ObjectInputStream(fTree);
 				BPTree<String> bP = (BPTree<String>) inTree.readObject();
 				bPAll.add(bP);
-				correspondingColumns.add(data[1]);
+				correspondingColumnsB.add(data[1]);
 				fTree.close();
 				inTree.close(); 
 			}
@@ -436,7 +440,7 @@ public class Table implements Serializable {
 				ObjectInputStream pin = new ObjectInputStream(pfile);
 
 				Page p = (Page) pin.readObject();
-				p.deleteFromPage(ht, bRAll, bPAll, correspondingColumns, ref.getPage());
+				p.deleteFromPage(ht, bRAll, bPAll, correspondingColumnsB, correspondingColumnsR, ref.getPage());
 
 				pfile.close();
 				pin.close();
@@ -453,7 +457,7 @@ public class Table implements Serializable {
 		
 		// serialize the btrees 
 		for (int x = 0; x < bPAll.size(); x++) {
-			FileOutputStream fo = new FileOutputStream("data/" + tableName + "_" + correspondingColumns.get(x) + ".txt");
+			FileOutputStream fo = new FileOutputStream("data/" + tableName + "_" + correspondingColumnsB.get(x) + ".txt");
 			ObjectOutputStream oj = new ObjectOutputStream(fo);
 			oj.writeObject(bPAll.get(x));
 			fo.close();
@@ -490,7 +494,9 @@ public class Table implements Serializable {
 		ArrayList<BRTree<Double>> bRAll = new ArrayList<BRTree<Double>>();
 		ArrayList<BPTree<String>> bPAll = new ArrayList<BPTree<String>>();
 
-		ArrayList<String> correspondingColumns = new ArrayList<String>();
+		ArrayList<String> correspondingColumnsB = new ArrayList<String>();
+		ArrayList<String> correspondingColumnsR = new ArrayList<String>();
+
 		BufferedReader mCsvReader = new BufferedReader(new FileReader("data\\metadata.csv"));
 		while ((row = mCsvReader.readLine()) != null) {
 			String[] data = row.split(",");
@@ -504,14 +510,16 @@ public class Table implements Serializable {
 				if(data[2].equals("java.awt.Polygon")) {
 					BRTree<Double> bR = (BRTree<Double>) inTree.readObject();
 					bRAll.add(bR);
+					correspondingColumnsR.add(data[1]);
 				}
 				else {
 					BPTree<String> bP = (BPTree<String>) inTree.readObject();
 					bPAll.add(bP);
+					correspondingColumnsB.add(data[1]);
 				}
 				
 				
-				correspondingColumns.add(data[1]);
+				
 				fTree.close();
 				inTree.close();
 			}
@@ -572,7 +580,7 @@ public class Table implements Serializable {
 			in.close();
 			file.close();
 			System.out.println("Size before delete= " + p.size());
-			p.deleteFromPage(ht, bRAll, bPAll, correspondingColumns, pages.get(pageCounter));
+			p.deleteFromPage(ht, bRAll, bPAll, correspondingColumnsB , correspondingColumnsR, pages.get(pageCounter));
 
 			FileOutputStream fileSER = new FileOutputStream(pages.get(pageCounter));
 			ObjectOutputStream outSER = new ObjectOutputStream(fileSER);
@@ -584,9 +592,16 @@ public class Table implements Serializable {
 		}
 		// serialize the btrees 
 		for (int x = 0; x < bRAll.size(); x++) {
-			FileOutputStream fo = new FileOutputStream("data/" + tableName + "_" + correspondingColumns.get(x) + ".txt");
+			FileOutputStream fo = new FileOutputStream("data/" + tableName + "_" + correspondingColumnsR.get(x) + ".txt");
 			ObjectOutputStream oj = new ObjectOutputStream(fo);
 			oj.writeObject(bRAll.get(x));
+			fo.close();
+			oj.close();
+		}
+		for (int x = 0; x < bPAll.size(); x++) {
+			FileOutputStream fo = new FileOutputStream("data/" + tableName + "_" + correspondingColumnsB.get(x) + ".txt");
+			ObjectOutputStream oj = new ObjectOutputStream(fo);
+			oj.writeObject(bPAll.get(x));
 			fo.close();
 			oj.close();
 		}

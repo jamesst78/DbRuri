@@ -63,7 +63,8 @@ public class Page extends Vector {
 		return null;
 	}
 
-	public void deleteFromPage( Hashtable<String, Comparable> ht,ArrayList<BRTree<Double>> bRAll,ArrayList<BPTree<String>> bPAll, ArrayList<String> columnNamesbt, String pageName) throws IOException, ClassNotFoundException {
+	public void deleteFromPage( Hashtable<String, Comparable> ht,ArrayList<BRTree<Double>> bRAll,ArrayList<BPTree<String>> bPAll, 
+			ArrayList<String> columnNamesbt, ArrayList<String> columnNamesrt, String pageName) throws IOException, ClassNotFoundException {
 		ArrayList<String> columnNames = new ArrayList<String>();
 		ArrayList<Comparable> columnValues = new ArrayList<Comparable>();
 
@@ -88,8 +89,8 @@ public class Page extends Vector {
 			if (satisfiesCondition) {
 				this.remove(i);
 			for(int k=0;k<bRAll.size();k++) {
-				System.out.println("deleting from the Rtrees" + ((Polygon)(t.theTuple.get(columnNamesbt.get(k)))).getArea());
-				bRAll.get(k).delete(((Polygon)(t.theTuple.get(columnNamesbt.get(k)))).getArea(), pageName);
+				System.out.println("deleting from the Rtrees" + ((Polygon)(t.theTuple.get(columnNamesrt.get(k)))).getArea());
+				bRAll.get(k).delete(((Polygon)(t.theTuple.get(columnNamesrt.get(k)))).getArea(), pageName);
 				
 			}
 			for(int k=0;k<bPAll.size();k++) {
