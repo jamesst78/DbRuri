@@ -156,7 +156,7 @@ public class Table implements Serializable {
 		}
 	}
 	
-	public void deleteFromTableBTree(String strTableName, Hashtable<String, Comparable> ht,ArrayList<BRTree<String>> bRAllht,
+	public void deleteFromTableBTreeR(String strTableName, Hashtable<String, Comparable> ht,ArrayList<BRTree<Double>> bRAllht,
 			ArrayList<String> RPlusColht) throws IOException, ClassNotFoundException, DBAppException{
 		String type = "";
 		String tableKey = "";
@@ -175,9 +175,11 @@ public class Table implements Serializable {
 					tableKey = data[1];
 				}
 			}
-		}
+		} 
 		//trees belonging to this table
-		ArrayList<BRTree<String>> bRAll = new ArrayList<BRTree<String>>();
+		ArrayList<BRTree<Double>> bRAll = new ArrayList<BRTree<Double>>();
+		ArrayList<BPTree<String>> bPAll = new ArrayList<BPTree<String>>();
+
 		ArrayList<String> correspondingColumns = new ArrayList<String>();
 		BufferedReader mCsvReader = new BufferedReader(new FileReader("data\\metadata.csv"));
 		while ((row = mCsvReader.readLine()) != null) {
@@ -188,11 +190,11 @@ public class Table implements Serializable {
 				String tPath = "data/" + data[0] + "_" + data[1] + ".txt";
 				FileInputStream fTree = new FileInputStream(tPath);
 				ObjectInputStream inTree = new ObjectInputStream(fTree);
-				BRTree<String> bP = (BRTree<String>) inTree.readObject();
+				BRTree<Double> bP = (BRTree<Double>) inTree.readObject();
 				bRAll.add(bP);
 				correspondingColumns.add(data[1]);
 				fTree.close();
-				inTree.close();
+				inTree.close(); 
 			}
 		}
 
@@ -241,42 +243,56 @@ public class Table implements Serializable {
 				break;
 			}
 		}
-			boolean tobeincluded = true;
-			ArrayList<ArrayList <Ref>> allRefs = new ArrayList();
-	     	//ArrayList<Ref> refs = bRAllht.get(0).search(RPlusColht.get(0));
-	     	ArrayList<Ref> refsToBeDeleted = new ArrayList<Ref>();
-            for(int i=0;i< bRAllht.size();i++){
-            	allRefs.get(i).addAll(bRAllht.get(i).search(RPlusColht.get(i)));  //got all refs in all the trees
-            }
-            
-            //check ref by ref if its in all other trees
-            Ref chosenRef;
-            ArrayList<Ref> chosenList;
-            for(int j = 0 ; j<allRefs.size() ; j++) {
-            	//choose a list first
-            	chosenList = allRefs.get(j);
-            	//now check ref by ref in the chosen list
-            		for(int k = 0 ; k <chosenList.size() ; k++) {
-            			tobeincluded = true;
-            			chosenRef = chosenList.get(k);
-            			//now check if the other lists contain it
-            					for(int p = 0 ; p<allRefs.size(); p++) {
-            						if(!allRefs.get(p).contains(chosenRef)) {
-            							tobeincluded = false;
-            						}
-            					}
-            				if(tobeincluded == true) {
-            					refsToBeDeleted.add(chosenRef);
-            				}
-            			
-            					
-            				
-            		}
-            	
-            }
+//			boolean tobeincluded = true;
+//			ArrayList<ArrayList <Ref>> allRefs = new ArrayList();
+//	     	//ArrayList<Ref> refs = bRAllht.get(0).search(RPlusColht.get(0));
+//	     	ArrayList<Ref> refsToBeDeleted = new ArrayList<Ref>();
+//            for(int i=0;i< bRAllht.size();i++){
+//            	allRefs.get(i).addAll(bRAllht.get(i).search(RPlusColht.get(i)));  //got all refs in all the trees
+//            }
+//            
+//            //check ref by ref if its in all other trees
+//            Ref chosenRef;
+//            ArrayList<Ref> chosenList;
+//            for(int j = 0 ; j<allRefs.size() ; j++) {
+//            	//choose a list first
+//            	chosenList = allRefs.get(j);
+//            	//now check ref by ref in the chosen list
+//            		for(int k = 0 ; k <chosenList.size() ; k++) {
+//            			tobeincluded = true;
+//            			chosenRef = chosenList.get(k);
+//            			//now check if the other lists contain it
+//            					for(int p = 0 ; p<allRefs.size(); p++) {
+//            						if(!allRefs.get(p).contains(chosenRef)) {
+//            							tobeincluded = false;
+//            						}
+//            					}
+//            				if(tobeincluded == true) {
+//            					refsToBeDeleted.add(chosenRef);
+//            				}
+//            			
+//            					
+//            				
+//            		}
+//            	
+//            }
+//		
+		
+	 	ArrayList<Ref> refs = bRAllht.get(0).search(((Polygon)ht.get(RPlusColht.get(0))).getArea());
+	 	System.out.println("array is :" +refs); 
+	 	
+//     	ArrayList<Ref> ref1 = new ArrayList<Ref>(); //unique tuples
+//        for(int i=1;i< bRAllht.size();i++){
+//           ref1 = bRAllht.get(i).search(ht.get(RPlusColht.get(i)));
+//        	for(int j=0;j<ref1.size();j++){
+//        		if(!refs.contains(ref1.get(j))){
+//        			refs.add(ref1.get(j));
+//        		}
+//        	}
+//        }
 			
 			ArrayList<String> finishedPages = new ArrayList<String>();
-			for (Ref ref : refsToBeDeleted) {
+			for (Ref ref : refs) {
 				if (finishedPages.contains(ref.getPage()))
 					continue;
 				String page = ref.getPage();
@@ -286,7 +302,7 @@ public class Table implements Serializable {
 				ObjectInputStream pin = new ObjectInputStream(pfile);
 
 				Page p = (Page) pin.readObject();
-				p.deleteFromPage(ht, bRAll, correspondingColumns, ref.getPage());
+				p.deleteFromPage(ht, bRAll, bPAll, correspondingColumns, ref.getPage());
 
 				pfile.close();
 				pin.close();
@@ -312,6 +328,144 @@ public class Table implements Serializable {
 	}
 
 
+	
+	
+	
+	public void deleteFromTableBTreeB(String strTableName, Hashtable<String, Comparable> ht,ArrayList<BPTree<String>> bPAllht,
+			ArrayList<String> BPlusColht) throws IOException, ClassNotFoundException, DBAppException{
+		String type = "";
+		String tableKey = "";
+		ArrayList<String> columnNames = new ArrayList<String>();
+		ArrayList<String> columnTypes = new ArrayList<String>();
+		String row = "";
+		BufferedReader csvReader = new BufferedReader(new FileReader("data\\metadata.csv"));
+		while ((row = csvReader.readLine()) != null) {
+			String[] data = row.split(",");
+			// do something with the data
+			if (data[0].equals(tableName)) {
+				columnNames.add(data[1]);
+				columnTypes.add(data[2]);
+				if (data[3].equals("true")) {
+					type = data[2];
+					tableKey = data[1];
+				}
+			}
+		} 
+		//trees belonging to this table
+		ArrayList<BPTree<String>> bPAll = new ArrayList<BPTree<String>>();
+		ArrayList<BRTree<Double>> bRAll = new ArrayList<BRTree<Double>>();
+		ArrayList<String> correspondingColumns = new ArrayList<String>();
+		BufferedReader mCsvReader = new BufferedReader(new FileReader("data\\metadata.csv"));
+		while ((row = mCsvReader.readLine()) != null) {
+			String[] data = row.split(",");
+			// do something with the data
+			if (data[0].equals(tableName) && data[4].equals("true")) {
+
+				String tPath = "data/" + data[0] + "_" + data[1] + ".txt";
+				FileInputStream fTree = new FileInputStream(tPath);
+				ObjectInputStream inTree = new ObjectInputStream(fTree);
+				BPTree<String> bP = (BPTree<String>) inTree.readObject();
+				bPAll.add(bP);
+				correspondingColumns.add(data[1]);
+				fTree.close();
+				inTree.close(); 
+			}
+		}
+
+		// if HT contains key with incompatible type throw exception
+		Enumeration<String> enumeration = ht.keys();
+		while (enumeration.hasMoreElements()) {
+			String theName = enumeration.nextElement();
+			if (!columnNames.contains(theName))
+				throw new DBAppException("Table does not contain column named " + theName);
+			Comparable theValue = ht.get(theName);
+			String expectedType = "";
+			int i = 0;
+			for (i = 0; i < columnNames.size(); i++)
+				if (columnNames.get(i).equals(theName)) {
+					expectedType = columnTypes.get(i);
+					break;
+				}
+
+			switch (expectedType) {
+			case "java.lang.Integer":
+				if (!theValue.getClass().toString().equals("class java.lang.Integer"))
+					throw new DBAppException("Incorrect type entered .. " + theName + " Should be Integer");
+				break;
+			case "java.lang.Double":
+				if (!theValue.getClass().toString().equals("class java.lang.Double"))
+					throw new DBAppException("Incorrect type entered .. " + theName + " Should be Double");
+				break;
+			case "java.lang.String":
+				if (!theValue.getClass().toString().equals("class java.lang.String"))
+					throw new DBAppException("Incorrect type entered .. " + theName + " Should be String");
+				break;
+			case "java.awt.Polygon":
+				ht.put(columnNames.get(i), Polygon.parsePolygon(theValue.toString()));
+				break;
+			case "java.util.Date":
+				SimpleDateFormat formatter = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
+				try {
+					ht.put(columnNames.get(i), formatter.parse(theValue.toString()));
+				} catch (ParseException e) {
+					throw new DBAppException("Invalid date format entered");
+				}
+				break;
+			case "java.lang.Boolean":
+				if (!theValue.getClass().toString().equals("class java.lang.Boolean"))
+					throw new DBAppException("Incorrect type entered .. " + theName + " Should be Boolean");
+				break;
+			}
+		}
+			
+	
+		
+	 	ArrayList<Ref> refs = bPAllht.get(0).search((ht.get(BPlusColht.get(0))).toString());
+	 	System.out.println("array is :" +refs); 
+	 	
+
+			
+			ArrayList<String> finishedPages = new ArrayList<String>();
+			for (Ref ref : refs) {
+				if (finishedPages.contains(ref.getPage()))
+					continue;
+				String page = ref.getPage();
+				finishedPages.add(page);
+				System.out.println(page);
+				FileInputStream pfile = new FileInputStream(page);
+				ObjectInputStream pin = new ObjectInputStream(pfile);
+
+				Page p = (Page) pin.readObject();
+				p.deleteFromPage(ht, bRAll, bPAll, correspondingColumns, ref.getPage());
+
+				pfile.close();
+				pin.close();
+
+				FileOutputStream fileSER = new FileOutputStream(page);
+				ObjectOutputStream outSER = new ObjectOutputStream(fileSER);
+				outSER.writeObject(p);
+
+				outSER.close();
+				fileSER.close();
+				//System.out.println("Size after delete= " + p.size());
+			}
+		
+		
+		// serialize the btrees 
+		for (int x = 0; x < bPAll.size(); x++) {
+			FileOutputStream fo = new FileOutputStream("data/" + tableName + "_" + correspondingColumns.get(x) + ".txt");
+			ObjectOutputStream oj = new ObjectOutputStream(fo);
+			oj.writeObject(bPAll.get(x));
+			fo.close();
+			oj.close();
+		}
+	}
+
+	
+	
+	
+	
+	
 	public void deleteFromTable(String strTableName, Hashtable<String, Comparable> ht)
 			throws IOException, ClassNotFoundException, DBAppException {
 		String type = "";
@@ -333,7 +487,9 @@ public class Table implements Serializable {
 			}
 		}
 		//trees belonging to this table
-		ArrayList<BRTree<String>> bRAll = new ArrayList<BRTree<String>>();
+		ArrayList<BRTree<Double>> bRAll = new ArrayList<BRTree<Double>>();
+		ArrayList<BPTree<String>> bPAll = new ArrayList<BPTree<String>>();
+
 		ArrayList<String> correspondingColumns = new ArrayList<String>();
 		BufferedReader mCsvReader = new BufferedReader(new FileReader("data\\metadata.csv"));
 		while ((row = mCsvReader.readLine()) != null) {
@@ -344,8 +500,17 @@ public class Table implements Serializable {
 				String tPath = "data/" + data[0] + "_" + data[1] + ".txt";
 				FileInputStream fTree = new FileInputStream(tPath);
 				ObjectInputStream inTree = new ObjectInputStream(fTree);
-				BRTree<String> bR = (BRTree<String>) inTree.readObject();
-				bRAll.add(bR);
+				
+				if(data[2].equals("java.awt.Polygon")) {
+					BRTree<Double> bR = (BRTree<Double>) inTree.readObject();
+					bRAll.add(bR);
+				}
+				else {
+					BPTree<String> bP = (BPTree<String>) inTree.readObject();
+					bPAll.add(bP);
+				}
+				
+				
 				correspondingColumns.add(data[1]);
 				fTree.close();
 				inTree.close();
@@ -407,7 +572,7 @@ public class Table implements Serializable {
 			in.close();
 			file.close();
 			System.out.println("Size before delete= " + p.size());
-			p.deleteFromPage(ht, bRAll, correspondingColumns, pages.get(pageCounter));
+			p.deleteFromPage(ht, bRAll, bPAll, correspondingColumns, pages.get(pageCounter));
 
 			FileOutputStream fileSER = new FileOutputStream(pages.get(pageCounter));
 			ObjectOutputStream outSER = new ObjectOutputStream(fileSER);

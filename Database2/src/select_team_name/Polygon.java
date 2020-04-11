@@ -69,6 +69,12 @@ public class Polygon extends java.awt.Polygon implements Comparable {
 		
 	}
 	
+	public double getArea() {
+		Dimension dim1 = this.getBounds( ).getSize( );
+		double ThisArea1 = dim1.width * dim1.height;
+		return ThisArea1;
+	}
+	
 
 	
 	
