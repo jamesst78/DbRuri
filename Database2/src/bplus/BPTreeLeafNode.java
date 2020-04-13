@@ -1,5 +1,7 @@
 package bplus;
 
+
+
 import java.io.Serializable;
 import java.util.ArrayList;
 
@@ -113,7 +115,6 @@ public class BPTreeLeafNode<T extends Comparable<T>> extends BPTreeNode<T> imple
 	 * @param recordReference the pointer to the record associated with the key
 	 */
 	private void insertAt(int index, Comparable<T> key, Ref recordReference) {
-		System.out.println("here for "+key.toString());
 		boolean hadtoShift = false;
 		for (int i = numberOfKeys - 1; i >= index; --i) {
 			if (this.contains(key)) {
@@ -124,7 +125,7 @@ public class BPTreeLeafNode<T extends Comparable<T>> extends BPTreeNode<T> imple
 			records[i+1] = records[i];
 		}
 		boolean flag = false;
-		for (int i = 0; i < keys.length; i++)
+		for (int i = 0; i < numberOfKeys; i++)
 			if (key.equals(keys[i])) {
 				flag = true;
 				index = i;
@@ -147,7 +148,7 @@ public class BPTreeLeafNode<T extends Comparable<T>> extends BPTreeNode<T> imple
 			this.setRecord(i + 1, getRecord(i));
 		}
 		boolean flag = false;
-		for (int i = 0; i < keys.length; i++)
+		for (int i = 0; i < numberOfKeys; i++)
 			if (key.equals(keys[i])) {
 				flag = true;
 				index = i;
@@ -274,6 +275,10 @@ public class BPTreeLeafNode<T extends Comparable<T>> extends BPTreeNode<T> imple
 			records[i] = records[i + 1];
 		}
 		numberOfKeys--;
+		if(numberOfKeys<keys.length) {
+			records[numberOfKeys] = null;
+			keys[numberOfKeys] = null;
+		}
 	}
 
 	public void deleteAt(int index, String pageNum) {
@@ -289,6 +294,10 @@ public class BPTreeLeafNode<T extends Comparable<T>> extends BPTreeNode<T> imple
 				records[i] = records[i + 1];
 			}
 			numberOfKeys--;
+			if(numberOfKeys<keys.length) {
+				records[numberOfKeys] = null;
+				keys[numberOfKeys] = null;
+			}
 		}
 	}
 

@@ -1,6 +1,8 @@
 package select_team_name;
 
-public class Point {
+import java.io.Serializable;
+
+public class Point implements Comparable , Serializable {
 		double x;
 		double y;
 	public static void main(String[] args) {
@@ -8,6 +10,11 @@ public class Point {
 
 		
 		
+	}
+	
+	public Point(int x, int y) {
+		this.x = x;
+		this.y = y;
 	}
 	
 	public Point getMinX(Point p) {
@@ -39,6 +46,18 @@ public class Point {
 		else
 			return p;
 	}
+
+	@Override
+	public int compareTo(Object o) {
+		Point p = (Point)o;
+		if(this.x == p.x && this.y == p.y)
+		return 0;
+		else {
+			return -1;
+		}
+	}
+	
+	
 	
 	
 	

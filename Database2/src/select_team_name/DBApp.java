@@ -26,6 +26,7 @@ import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.Random;
+import java.util.Scanner;
 import java.util.concurrent.ThreadLocalRandom;
 
 import bplus.BPTree;
@@ -44,6 +45,78 @@ public class DBApp {
 			myWriter.close();
 		}
 	}
+	
+	public void createBTreeIndex(String strTableName, String strColName) throws DBAppException, IOException, ClassNotFoundException{
+		String row = "";
+		BufferedReader csvReader = new BufferedReader(new FileReader("data\\metadata.csv"));
+		boolean flag = false;
+		while ((row = csvReader.readLine()) != null) {
+			String[] data = row.split(",");
+			// do something with the data
+			if (data[0].equals(strTableName)) {
+				flag = true;
+			}
+		}
+		csvReader.close();
+		if(!flag)
+			throw new DBAppException("Table does not exist");
+		
+		String dir = "data\\" + strTableName + ".txt";
+		// deserialize
+		FileInputStream file;
+		try {
+			file = new FileInputStream(dir);
+		} catch (FileNotFoundException e) {
+			throw new DBAppException("Table " + strTableName + " not found");
+		}
+		ObjectInputStream in = new ObjectInputStream(file);
+
+		// Method for deserialization of object
+		Table t = (Table) in.readObject();
+		
+		t.createBTreeIndex(strTableName, strColName);
+
+		in.close();
+		file.close();
+		
+		File csfile = new File("data/temp.csv");
+		try {
+			FileWriter fw = new FileWriter(csfile, true);
+			BufferedWriter bw = new BufferedWriter(fw);
+			PrintWriter pw = new PrintWriter(bw);
+			File old = new File("data/metadata.csv");
+			Scanner x = new Scanner(old);
+			x.useDelimiter("[,\n]");
+			
+			while(x.hasNext()) {
+				String tableName = x.next();
+				String columnName = x.next();
+				String type = x.next();
+				String isKey =x.next();
+				String isIndexed = x.next();
+				
+				if(columnName.equals(strColName)) {
+					pw.print(tableName+","+columnName+","+type+","+isKey+","+"true");
+				}
+				else {
+					pw.print(tableName+","+columnName+","+type+","+isKey+","+isIndexed);
+				}
+				pw.print("\n");
+			}
+			x.close();
+			pw.flush();
+			fw.close();
+			bw.close();
+			pw.close();
+			Files.delete(Paths.get("data/metadata.csv"));
+			File dump = new File("data/metadata.csv");
+			csfile.renameTo(dump);
+		}
+		catch(Exception e) {
+			e.printStackTrace();
+		}
+	}
+
 
 	public void createTable(String tableName, String key, Hashtable ht) throws DBAppException, IOException {
 		String row = "";
@@ -62,6 +135,7 @@ public class DBApp {
 			throw new DBAppException("Clustering key must be a column in the table");
 		}
 		new Table(tableName, key, ht);
+		csvReader.close();
 	}
 
 	public void insertIntoTable(String tableName, Hashtable<String, Object> ht)
@@ -102,6 +176,8 @@ public class DBApp {
 				}
 			}
 		}
+		csvReader.close();
+		
 		// System.out.println(clusterkey);
 		if (clusterkey == "") {
 			throw new FileNotFoundException("File / table not found exception");
@@ -188,12 +264,15 @@ public class DBApp {
 
 		out.close();
 		fileO.close();
+		
+		csvReader.close();
 	}
 
 	public void deleteFromTable(String strTableName, Hashtable<String, Object> ht)
 			throws ClassNotFoundException, IOException, DBAppException {
 		String row = "";
 		ArrayList<String> rtreeCol = new ArrayList<String>();
+		ArrayList<String> btreeCol = new ArrayList<String>();
 		BufferedReader csvReader = new BufferedReader(new FileReader("data\\metadata.csv"));
 		boolean flag = false;
 		while ((row = csvReader.readLine()) != null) {
@@ -202,10 +281,18 @@ public class DBApp {
 			if (data[0].equals(strTableName)) {
 				flag = true;
 			}
-			if(data[0].equals(strTableName) && data[4].equals("true") && ht.containsKey(data[1])) {
+			if(data[0].equals(strTableName) && data[4].equals("true") && ht.contains(data[1])) {
+				//we should check the type
+				if(data[2].equals("java.awt.Polygon")) {
 				rtreeCol.add(data[1]);
+				}
+				else {
+					btreeCol.add(data[1]);
+				}
 			}
 		}
+		System.out.println("CURRENTLY PRINTING btree array" + btreeCol);
+
 		if(!flag)
 			throw new DBAppException("Table does not exsist");
 		Hashtable<String, Comparable> newHt = new Hashtable<String, Comparable>();
@@ -223,22 +310,39 @@ public class DBApp {
 		// Method for deserialization of object
 		Table t = (Table) in.readObject();
 		
-		if(rtreeCol.isEmpty()) {
+		if(rtreeCol.isEmpty() && btreeCol.isEmpty()) {
 			t.deleteFromTable(strTableName, newHt);
 		}
 		else {
-			ArrayList<BRTree<String>> bRAll  = new ArrayList<BRTree<String>>();
+			if(!rtreeCol.isEmpty()) {
+			ArrayList<BRTree<Double>> bRAll  = new ArrayList<BRTree<Double>>();
 		  for(int i = 0;i<rtreeCol.size();i++){				//Im now deserializing all the RTrees I found made for the columns in input ht
-			String tPath = "data/"+strTableName+"_"+rtreeCol.get(i);
+			String tPath = "data\\"+strTableName+"_"+rtreeCol.get(i) + ".txt";
 			FileInputStream fTree = new FileInputStream(tPath);
 			ObjectInputStream inTree = new ObjectInputStream(fTree);
-			BRTree<String> bP = (BRTree<String>)inTree.readObject();    
+			BRTree<Double> bP = (BRTree<Double>)inTree.readObject();    
 			bRAll.add(bP);												//adding those RTrees to an array to pass it to table delete using RTree
 			fTree.close();
 			inTree.close();	
+			}		  
+			t.deleteFromTableBTreeR(strTableName,newHt,bRAll,rtreeCol);
 			}
-		  
-			t.deleteFromTableBTree(strTableName,newHt,bRAll,rtreeCol);
+			
+			if(!btreeCol.isEmpty()) {
+				 
+					ArrayList<BPTree<String>> bPAll  = new ArrayList<BPTree<String>>();
+				  for(int i = 0;i<btreeCol.size();i++){				//Im now deserializing all the RTrees I found made for the columns in input ht
+					String tPath = "data\\"+strTableName+"_"+btreeCol.get(i) + ".txt";
+					FileInputStream fTree = new FileInputStream(tPath);
+					ObjectInputStream inTree = new ObjectInputStream(fTree);
+					BPTree<String> bP = (BPTree<String>)inTree.readObject();    
+					bPAll.add(bP);												//adding those RTrees to an array to pass it to table delete using RTree
+					fTree.close();
+					inTree.close();	
+					}		  
+					t.deleteFromTableBTreeB(strTableName,newHt,bPAll,btreeCol);
+					
+			}
 // serialize the trees after deleting			
 //			for (int x = 0; x < bPAll.size(); x++) {
 //				FileOutputStream fo = new FileOutputStream(
@@ -336,7 +440,7 @@ public class DBApp {
 	
 	// Muhad && Farah && yuka R tree
 	
-	public void createRTreeIndex(String strTableName , String strColName) throws DBAppException, IOException, ClassNotFoundException
+public void createRTreeIndex(String strTableName , String strColName) throws DBAppException, IOException, ClassNotFoundException
 	{
 		//TODO: change to 255 later
 		BRTree tree = new BRTree<Double>(2);  //2 for testing , later 255
@@ -369,6 +473,7 @@ public class DBApp {
 			FileOutputStream fileO = new FileOutputStream(pageString);
 			ObjectOutputStream out = new ObjectOutputStream(fileO);
 			out.writeObject(p);
+			
 
 			out.close();
 			fileO.close();
@@ -397,16 +502,51 @@ public class DBApp {
 		
 		FileOutputStream file4 = new FileOutputStream(treeDir);
 		ObjectOutputStream out4 = new ObjectOutputStream(file4);
+		out4.writeObject(tree);
 		out4.close();
 		file4.close();
 		
+		File csfile = new File("data/temp.csv");
+		try {
+			FileWriter fw = new FileWriter(csfile, true);
+			BufferedWriter bw = new BufferedWriter(fw);
+			PrintWriter pw = new PrintWriter(bw);
+			File old = new File("data/metadata.csv");
+			Scanner x = new Scanner(old);
+			x.useDelimiter("[,\n]");
+			
+			while(x.hasNext()) {
+				String tableName = x.next();
+				String columnName = x.next();
+				String type = x.next();
+				String isKey =x.next();
+				String isIndexed = x.next();
+				
+				if(columnName.equals(strColName)) {
+					pw.print(tableName+","+columnName+","+type+","+isKey+","+"true");
+				}
+				else {
+					pw.print(tableName+","+columnName+","+type+","+isKey+","+isIndexed);
+				}
+				pw.print("\n");
+			}
+			x.close();
+			pw.flush();
+			fw.close();
+			bw.close();
+			pw.close();
+			Files.delete(Paths.get("data/metadata.csv"));
+			File dump = new File("data/metadata.csv");
+			csfile.renameTo(dump);
+		}
+		catch(Exception e) {
+			e.printStackTrace();
+		}
 		
 		
 		
 		
-		
-	}
-	
+	}	
 	
 	
 	
@@ -436,48 +576,48 @@ public class DBApp {
 		ht2.put("id", new Integer(2));
 		//ht2.put("gpa", 1.5);
 		ht2.put("name", "Mohab2");
-		ht2.put("home", "(0,0),(7,3),(2,2)");
+		ht2.put("home", "(0,0),(7,3),(2,2),(6,6)");
 		ht2.put("office", "(0,0),(5,5),(7,7)");
 
 
 		Hashtable<String, Object> ht3 = new Hashtable<String, Object>();
 		ht3.put("id", new Integer(3));
 		ht3.put("name", "Farahat4");
-		ht3.put("home", "(0,0),(5,5),(2,2)");
+		ht3.put("home", "(0,0),(45,52),(32,25)");
 		ht3.put("office", "(0,0),(9,9),(4,1)");
 		
 		Hashtable<String, Object> ht4 = new Hashtable<String, Object>();
 		ht4.put("id", new Integer(4));
 		ht4.put("name", "Mai4");
-		ht4.put("home", "(1,0),(1,5),(1,2)");
+		ht4.put("home", "(10,60),(11,55),(14,22)");
 		ht4.put("office", "(0,0),(9,9),(4,1)");
 		
 		Hashtable<String, Object> ht5 = new Hashtable<String, Object>();
 		ht5.put("id", new Integer(5));
 		ht5.put("name", "Ahmed5");
-		ht5.put("home", "(3,3),(8,4),(9,5)");
+		ht5.put("home", "(30,30),(80,40),(90,50)");
 		ht5.put("office", "(0,0),(4,4),(4,8)");
 		
 		Hashtable<String, Object> ht6 = new Hashtable<String, Object>();
 		ht6.put("id", new Integer(6));
 		ht6.put("name", "Zeiyad6");
-		ht6.put("home", "(2,2),(1,5),(0,2)");
-		ht6.put("office", "(0,6),(2,3),(8,9)");
+		ht6.put("home", "(21,0),(51,57),(22,92)");
+		ht6.put("office", "(4,5),(4,0),(4,9)");
 		
 		Hashtable<String, Object> ht7 = new Hashtable<String, Object>();
 		ht7.put("id", new Integer(7));
 		ht7.put("name", "Salma7");
-		ht7.put("home", "(1,1),(0,4),(2,7)");
-		ht7.put("office", "(0,6),(2,3),(8,9)");
+		ht7.put("home", "(1,1),(0,4),(2,7),(100,100)");
+		ht7.put("office", "(0,5),(0,0),(0,9)");
 		
 		Hashtable<String, Object> ht8 = new Hashtable<String, Object>();
 		
-		ht8.put("name", "Salma7");
-		ht8.put("office", "(0,6),(2,3),(8,9)");
+	//	ht8.put("name", "Salma7");
+		ht8.put("office", "(0,5),(0,0),(0,9)");
+	  //ht8.put("id", 7);
 		
 		
-		
-		
+		//double ht8Area  = ((Polygon)Polygon.parsePolygon(ht8.get("office").toString())).getArea();
 
 		db.createTable("People", "id", ht);
 		db.insertIntoTable("People", ht1);
@@ -487,6 +627,10 @@ public class DBApp {
 		db.insertIntoTable("People", ht5);
 		db.insertIntoTable("People", ht6);
 		db.insertIntoTable("People", ht7);
+		
+		db.createBTreeIndex("People", "id");
+		
+		
 		db.createRTreeIndex("People", "home");
 		db.createRTreeIndex("People", "office");
 		
@@ -495,18 +639,21 @@ public class DBApp {
 		
 
 //		
-//		System.out.println("PRINTING TABLEEEEEEE");
-//		String dir = "data\\People.txt";
-//		FileInputStream f = new FileInputStream(dir);
-//		ObjectInputStream in = new ObjectInputStream(f);
-//
-//		Table t = (Table) in.readObject();
-//		
-//		String dir1 = t.pages.get(0);
-//
-//		FileInputStream f1 = new FileInputStream(dir1);
-//		ObjectInputStream in1 = new ObjectInputStream(f1);
-//		Page p1 = (Page) in1.readObject();
+		System.out.println("PRINTING TABLEEEEEEE");
+		String dir = "data\\People.txt";
+		FileInputStream f = new FileInputStream(dir);
+		ObjectInputStream in = new ObjectInputStream(f);
+
+		Table t = (Table) in.readObject();
+		
+		String dir1 = t.pages.get(0);
+
+		FileInputStream f1 = new FileInputStream(dir1);
+		ObjectInputStream in1 = new ObjectInputStream(f1);
+		Page p1 = (Page) in1.readObject();
+		System.out.println(p1);
+		
+		System.out.println("PRINTING TABLEEEEEEE DONEEEE");
 //
 //		//String dir2 = t.pages.get(1);
 //
@@ -525,7 +672,8 @@ public class DBApp {
 		
 		db.deleteFromTable("People", ht8);
 		
-//		
+		
+		
 		FileInputStream fi = new FileInputStream("data\\People_office.txt");
 		ObjectInputStream oi = new ObjectInputStream(fi);
 		BRTree<String> mybr = (BRTree<String>)oi.readObject();
@@ -539,9 +687,33 @@ public class DBApp {
 		fi2.close();
 		oi2.close();
 		System.out.println(mybr2);
+		
+		FileInputStream fi3 = new FileInputStream("data\\People_id.txt");
+		ObjectInputStream oi3 = new ObjectInputStream(fi3);
+		BPTree<String> mybr3 = (BPTree<String>)oi3.readObject();
+		fi3.close();
+		oi3.close();
+		System.out.println(mybr3);
 
 		
 		System.out.println("THAT'S IT");
+		
+		System.out.println("PRINTING TABLEEEEEEE AFTER DELETION");
+		
+		System.out.println("PRINTING TABLEEEEEEE");
+		String dir2 = "data\\People.txt";
+		FileInputStream f2 = new FileInputStream(dir2);
+		ObjectInputStream in2 = new ObjectInputStream(f2);
+
+		Table t2 = (Table) in2.readObject();
+		
+		String dir3 = t2.pages.get(0);
+
+		FileInputStream f3 = new FileInputStream(dir3);
+		ObjectInputStream in3 = new ObjectInputStream(f3);
+		Page p3 = (Page) in3.readObject();
+		System.out.println(p3);
+		
 
 		// Getting page
 		// Reading the object from a file

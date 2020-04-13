@@ -10,8 +10,14 @@ import java.util.StringTokenizer;
 
 
 public class Polygon extends java.awt.Polygon implements Comparable {
+	ArrayList<Point> points ;
+	
 	 public Polygon(int[]x,int[]y,int z){
 		 super(x,y,z);
+		 points = new ArrayList<>();
+		 for(int i = 0 ; i<x.length ; i++) {
+			 points.add(new Point(x[i] , y[i]));
+		 }
 	 }
 
 	public static Polygon parsePolygon(String s) throws DBAppException {
@@ -66,6 +72,45 @@ public class Polygon extends java.awt.Polygon implements Comparable {
 		points[1][1] = maxY-minY;   //hi ya ruri
 		
 		return points;
+		
+	}
+	
+	public double getArea() {
+		Dimension dim1 = this.getBounds( ).getSize( );
+		double ThisArea1 = dim1.width * dim1.height;
+		return ThisArea1;
+	}
+	
+	public boolean uniqueEqual(Polygon P) {
+		
+		Point testPoint = null;
+		boolean exactPolygon = true;
+		boolean pointFound = false;
+		
+		ArrayList<Boolean> pointsFound = new ArrayList<>();
+		
+		for(int i = 0 ; i<this.points.size() ; i++) {
+			testPoint = this.points.get(i);
+				for(int j = 0 ; j<P.points.size() ; j++) {
+					if(testPoint.compareTo(P.points.get(j)) == 0) {
+						pointFound = true;
+					
+					}
+					
+				}
+			//	System.out.println("the boolean for point: "+pointFound);
+				pointsFound.add(pointFound);
+				pointFound = false;
+			
+		}
+		
+		for(int k = 0 ; k<pointsFound.size() ; k++) {
+			if(pointsFound.get(k) == false) {
+				return false;
+			}
+			
+		}
+		return true;
 		
 	}
 	
